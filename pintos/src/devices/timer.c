@@ -30,7 +30,8 @@ static void busy_wait (int64_t loops);
 static void real_time_sleep (int64_t num, int32_t denom);
 static void real_time_delay (int64_t num, int32_t denom);
 
-struct thread* thread_pointer;  
+struct thread* thread_pointer;
+int64_t wake_tick;
 
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
@@ -102,7 +103,7 @@ timer_sleep (int64_t ticks)
   enum intr_level old_level = intr_disable ();
   // Interrupções
 
-  thread_pointer->wake_tick = final_tick;
+  wake_tick = final_tick;
   // Atribuo o valor dos ticks para acordar à variável do thread_pointer
 
   thread_block();
@@ -194,7 +195,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
   thread_tick ();
 
   if(&thread_pointer){
-    if(&thread_pointer->wake_tick > ticks){
+    if(wake_tick > ticks){
       thread_unblock(&thread_pointer);
     }
   }
