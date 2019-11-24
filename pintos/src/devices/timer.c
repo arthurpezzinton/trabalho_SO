@@ -193,9 +193,9 @@ timer_interrupt (struct intr_frame *args UNUSED)
   ticks++;
   thread_tick ();
 
-  if(thread_pointer){
-    if(thread_pointer->wake_tick > ticks){
-      thread_unblock(thread_pointer);
+  if(&thread_pointer){
+    if(&thread_pointer->wake_tick > ticks){
+      thread_unblock(&thread_pointer);
     }
   }
 }
