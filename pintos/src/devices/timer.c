@@ -30,6 +30,8 @@ static void busy_wait (int64_t loops);
 static void real_time_sleep (int64_t num, int32_t denom);
 static void real_time_delay (int64_t num, int32_t denom);
 
+struct *thread_pointer;
+
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
 void
@@ -89,11 +91,30 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
-  int64_t start = timer_ticks ();
+  int64_t final_tick = timer_ticks () + ticks;
+  // Aqui é onde dizemos pra variável quantos ticks ela vai valer, que será o tempo necessário pra thread "acordar"
+
+  *thread_pointer = thread_current();
+  // Definimos que a variável "thread" se refere a nossa thread atual
+
+  ASSERT (intr_get_level () == INTR_ON);
+  
+  enum intr_level old_level = intr_disable ();
+  // Interrupções
+
+  thread_pointer->wake_tick = final_tick;
+  // Atribuo o valor dos ticks para acordar à variável do thread_pointer
+
+  thread_block();
+  // Thread bloqueada
+
+  intr_set_level (old_level);
+
+  /*int64_t start = timer_ticks ();
 
   ASSERT (intr_get_level () == INTR_ON);
   while (timer_elapsed (start) < ticks) 
-    thread_yield ();
+    thread_yield ();*/
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -171,6 +192,12 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
+
+  if(&thread_pointer){
+    if(&thread_pointer->wake_tick > ticks){
+      thread_unblock(&thread_pointer);
+    }
+  }
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
