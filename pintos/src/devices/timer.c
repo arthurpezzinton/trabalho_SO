@@ -95,7 +95,7 @@ timer_sleep (int64_t ticks)
   int64_t final_tick = timer_ticks () + ticks;
   // Aqui é onde dizemos pra variável quantos ticks ela vai valer, que será o tempo necessário pra thread "acordar"
 
-  thread_pointer = &thread_current();
+  thread_pointer = thread_current();
   // Definimos que a variável "thread" se refere a nossa thread atual
 
   ASSERT (intr_get_level () == INTR_ON);
@@ -194,9 +194,9 @@ timer_interrupt (struct intr_frame *args UNUSED)
   ticks++;
   thread_tick ();
 
-  if(*thread_pointer){
+  if(thread_pointer){
     if(wake_tick > ticks){
-      thread_unblock(*thread_pointer);
+      thread_unblock(thread_pointer);
     }
   }
 }
